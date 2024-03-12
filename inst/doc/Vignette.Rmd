@@ -1,0 +1,399 @@
+---
+title: "Vignette"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: default
+vignette: >
+  %\VignetteIndexEntry{Vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup, eval=FALSE}
+library(Fluidigm)
+```
+
+# Preparations
+
+## Requirements
+
+Prior the installation of the Fluidigm package, you need to install plink, please install it according to the
+Plink instructions on your system. The project webpage can be found here:
+
+https://www.cog-genomics.org/plink2/
+
+# Installation
+
+## Cran (tba)
+The `Fluidigm` package is hosted on Cran and can be installed via
+
+```{r, eval=FALSE}
+install.packages("Fluidigm")
+```
+
+Stable release versions are usually even numbers like 0.2, 0.4, etc. 
+
+## GitHub
+The `Fluidigm` development platform is GitHub. The main-branch is usually similar to the Cran version. Also, published release versions on
+Cran are similar to Cran. Hence, the same version as Cran can be installed from GitHub
+
+```{r, eval=FALSE}
+library("remotes")
+install_github("fischuu/Fluidigm")
+```
+
+Stable release versions are usually even numbers like 0.2, 0.4, etc.
+
+However, the latest development version is hosted also on GitHub in the dev-branch and is labeled with uneven numbers 0.3.\*, 0.5.\* ,
+where the \* indicates the running index of added features. These features are indicated in the CHANGELOG list and document the progress
+of the package.
+
+The latest development version of `Fluidigm` can be installed by running
+
+```{r, eval=FALSE}
+library("devtools")
+install_github("fischuu/Fluidigm@dev")
+```
+
+
+# Usage
+
+The package is designed to run one function after another, namely
+
+
+  1. `fluidigm2PLINK(...)`
+  2. `estimateErrors(...)`
+  3. `calculatePairwiseSimilarities(...)`
+  4. `getPairwiseSimilarityLoci(...)`
+  5. `similarityMatrix(...)`
+  
+and the user can either run them one by one or execute them all at once, using the convenient `fluidigmAnalysisWrapper(...)`-wrapper function.
+
+## Example data and preparations
+
+You can download the file example_data.csv from HERE e.g. to the folder `~/My_fluidigm_project` to follow the vignette steps.
+
+Naturally, one first needs to load the `Fluidigm` library
+
+```{r}
+library("Fluidigm")
+```
+
+For convenience, we set first the working directory to avoid playing around with file paths
+
+```{r, eval=FALSE}
+setwd("~/My_fluidigm_project")
+```
+## Fluidigm to Plink
+
+The first step of the package functionality is to create a ped/map-file pair from the csv output that is received from the Fluidigm machine.
+
+The basic use of the function is like this
+
+```{r, eval=FALSE}
+fluidigm2PLINK(file = "example_data.csv",
+               map = "example_data.map",
+               out = "new_data")
+```
+
+Here, the `file` parameter is the file that is received from the Fluidigm machine and the `map` option expects the location details
+for the markers used in the Fluidigm, the `out` option defines the basename of the new generated files.
+
+Other non-obligaroty input options are `out`, a string specifying the output file name. If left empty, the original basename of the input file will be used for the new generated output. Then the logical flag `plots` indicats whether additional figures for conversion should be plotted. Default is TRUE. With the logical flag `rearrange` it can be controled if the order of the created
+ped/map filepair should follow the order given in the provided map file (option `TRUE`) or remain in the order as it is used in the Fluidigm file (option `FALSE`). The parameter `missing.geno` is a character string specifying how missing values should be coded. Default is "0 0". The logical option `fixNames` indicates whether whitespaces from sample names should be automatically removed. Default is TRUE. A file protection setting is the option `overwrite`. The logical indicates, wether the provided map sfile should be overwritten with the new map or not. By default, this is set to `FALSE` to avoid accidental file changes to the origianal file. If
+it is set to `TRUE` without providing a new filename to `out`, the original file is overwritten, if it is set to `FALSE` the function requires an input to `out` to avoid overwriting of the original map file. As in all other functions, the functions talk-activity can be controlled with the numerical `verbosity` value. Set to a higher number for more details. Default is 1. Verbosity can be switched off with the logical flag `verbose`.
+
+On case you want to overwrite the existing files and use the existing file names, the command would look like this
+
+```{r, eval = FALSE}
+fluidigm2PLINK(file = "example_data.csv",
+               map = "example_data.map", 
+               overwrite = TRUE)
+```
+
+### Output
+The function generates besides the ped-file also a set of verbose plots (if the default option `plots = TRUE` is set). These are namely
+
+1. `<filename>.additional_summary_stats.png`
+2. `<filename>.call_rate_markers.png`
+3. `<filename>.genotyping_success_samples.png`
+
+The two outputs `<filename>.call_rate_markers.png` and `<filename>.genotyping_success_samples.png` show barplots to indicate the 
+call rate of the genotypes and the genotyping success. The image`<filename>.additional_summary_stats.png` contains both of these,
+plus some additional information like output filenames, number of samples and number of markers.
+
+## Estimate errors
+
+The `estimateErrors` function is a powerful tool designed to process PLINK ped files and estimate errors. It provides a comprehensive analysis of genotyping data, ensuring the accuracy and reliability of your results. This function is particularly useful in large-scale genetic studies where error estimation is crucial for data integrity.
+
+One of the key features of `estimateErrors` is its ability to perform sex assignment and species marker analysis, if required. This is achieved by using the provided Y and X markers for sexing and species-identification markers for species analysis. 
+
+The function is highly customizable, allowing you to specify various parameters such as the path to the ped input file, the database name, and whether new samples should be added to the database. It also allows you to control the number of replicates to keep, the markers for sexing and species identification, and the thresholds for various error checks.
+
+Additionally, `estimateErrors` can create plots for visual inspection of the data and provides verbose output for detailed analysis. It returns a list containing a matrix indicating if genotypes are called correctly for replicates and/or if genotypes are missing, and a matrix with summary statistics.
+
+In summary, `estimateErrors` is an essential function for anyone working with PLINK ped files, providing a robust and flexible solution for error estimation, sex assignment, and species marker analysis.
+
+The basic use in the running example is as follows
+
+```{r, eval=FALSE}
+estErr.out <- estimateErrors(file="new_data.ped")
+```
+
+The default values to estimate the errors of the fluidigm run as `allele_error = 5`, `marker_dropout = 15` and `no_marker = 50`. That means, individuals are flags to be bad
+samples, if either of the criteria is met. The allele errors are here absolte values, the marker dropout is calcualte as percentage and the number of total marker yield is again an absolute value. If the function detects bad samples, it write out a file called `<filename>.ped_samples_to_RERUN.txt` that contains samplenames from samples that
+should be rerun, as they did not fulfil the minimum quality requirements.
+
+For sexing, we need to do two things. First we need to activate the sexing module by setting `sexing=TRUE` and then add markers placed on the y-chromosome to `y.marker` and
+markers from x-chromosome to `x.marker`. These two marker sets will be used for the sexing. For that marker set, the parameters provided in `male.y`, `male.hetX`, `female.y` , `female.Xtot`, `female.hetXtot`, `warning.noYtot` and `warning.noHetXtot` are used. These values give the number of detected markers, meaning, if e.g. `male.y` is set to 3, three of the `y.marker` needs to be detected in an individual to be classified to be male, then `male.hetX` gives the number of heterogeneous X-based markers need to be present and so forth.
+
+```{r, eval=FALSE}
+estErr.out <- estimateErrors(file="new_data.ped",
+                             sexing = TRUE,
+                             y.marker = "DBY7",
+                             x.marker = c("BICF2G63", 
+                                          "BICF2P19"))
+```
+
+Besides sexing, the function can also be used to flag for particular species. Here, a list of markers can be provided to the option `sp.marker` and based on that
+individuals are checked for the presence of this marker set and the summary values are given in the output data matrix.
+
+```{r, eval=FALSE}
+estErr.out <- estimateErrors(file="new_data.ped",
+                             sp.marker = "BICF2P5")
+```
+
+Naturally, performing sexing and species classification can be performed together like this
+
+```{r, eval=FALSE}
+estErr.out <- estimateErrors(file="new_data.ped",
+                             sexing = TRUE,
+                             y.marker = "DBY7",
+                             x.marker = c("BICF2G63", "BICF2P19"),
+                             sp.marker = "BICF2P5")
+```
+
+### Replicates
+The function can also handle replicates and negative controls inside the data. 
+
+The function removes currently all samples that are more often present than indicated in the option `keep.rep` (Default: 1). The means, by default the function does not accept 
+replicated samples and removes *all* related samples that are repeated more than that. Replicates are here indicated by the same sample name. Consequently, the position on the plate needs to be recorded to match with the underlying library preparation. For each sample, the function checks if the first and second run of the sample have the same genotype. If they do, it adds the genotype to the consensus sequence. If there’s only one run of the sample, it adds the genotype from the single run to the consensus sequence.
+The function then calculates the allele error and marker dropout rates for each sample based on the replicates. The allele error rate is the number of mismatches between the replicates divided by the total number of alleles, and the marker dropout rate is the number of missing markers divided by the total number of markers.
+
+The names of the negative controls are passed to the function through the `neg_controls` parameter.
+If the `neg_controls` parameter is not `NA`, the function removes the negative controls from the data along with the samples that have too low/high repetition.
+
+Please note that the function does not perform any further specific handling or analysis of the negative controls beyond this point. The main purpose of removing the negative controls is to prevent them from influencing the error rate calculations and the consensus sequence generation.
+
+### Output
+The function generates a couple of output files, namely
+
+1. `<filename>.ped_samples_to_RERUN.txt`
+2. `<filename>.ped_summary_individuals.csv`
+3. `<filename>.new_data.GOOD.map`
+4. `<filename>.new_data.GOOD.ped`
+5. `<filename>.allele_error_marker_dropout.png`
+
+Here, the first output (`<filename>.ped_samples_to_RERUN.txt`) just provides a list of samples flaged to have BAD quality. Each row contains one sample name. The file
+`<filename>.ped_summary_individuals.csv` contains the same information provided as list output from the `estimateErrors()` function, see details below. The ped/map filepair
+`<filename>.new_data.GOOD.map` and `<filename>.new_data.GOOD.ped` contains a filtered version of the input ped file, with bad samples removed. The map file remains unchanged
+and no alleles are removed from it.
+
+If the option `plots = TRUE` is set (default), also diagnostic plots are generated. Here, a barplot shows the frequency the different allele errors across all markers, then
+another shows the marker dropout rate (in percent) across all markers and then a scatterplot of the allele error rate versus the marker droput rate.
+
+In addition to that, the function provides the user also with a list, with two items `$gensim` and `$summs`. The `$gensim` list object provides information on the allele calls
+per marker and sample. The samples are in the columns, the alleles in the rows. If an allele matched with the corresponding replicate, the matrix is set to `TRUE`, if there is a mismatch between replicates the value is set to `FALSE` and if a allele is missing, the entry is setto `NA`. However, if no replicates are present, the value can only either be `TRUE` or `NA`.
+
+The `$summs` gives an informative summary data frame, depending on the picked options not all columns are always present, though. 
+
+| Column name | Details |
+|:------------|:--------|
+| Ind | The name of the individual sample | 
+| Ntrue | Number of alleles where replicate calls match | 
+| Nfalse | Number of alleles where replicate calls do not match | 
+| Nna | Number of alleles with missing data | 
+| Allele_error | Number of allele errors | 
+| Marker_dropout | Percentage of marker dropout | 
+| No_markers_repl1 | Number of missing markers in replicate 1 | 
+| No_markers_repl2 | Number of missing markers in replicate 2 | 
+| categ | Overall quality assessment, based on provided thresholds | 
+| noHetX1 | Number of heterogenous x-based markers for replicate 1 | 
+| noHetX2 | Number of heterogenous x-based markers for replicate 2 | 
+| noHetXtot | Number of total heterogenous x-based markers | 
+| noX1 | Number of x-based markers for replicate 1 | 
+| noX2 | Number of x-based markers for replicate 2 | 
+| noXtot | Total number of x-based markers | 
+| noY1 | Number of y-based markers for replicate 1 | 
+| noY2 | Number of y-based markers for replicate 2 | 
+| noYtot | Total number of y-based markers | 
+| sex | Estiamted sex, based on provided sexing threshold | 
+| noSPHetX1 | Number of heterogenous x-based species markers for replicate 1 | 
+| noSPHetX2 | Number of heterogenous x-based species markers for replicate 2 | 
+| noSPHetXtot | Total number of heterogenous x-based species markers| 
+| noSPX1 | Number of x-based species markers for replicate 1 | 
+| noSPX2 | Number of x-based species markers for replicate 2 | 
+| noSPXtot | Total number of x-based species markers |
+
+## Calculate pairwise similarities
+
+The `calculatePairwiseSimilarities` function is a powerful tool designed to calculate pairwise similarities between genotypes. This function
+serves as a wrapper to the PLINK software, which is a free, open-source whole genome association analysis toolset.
+
+The function takes as input a file path to the filtered ped/map file pair (without the ped/map file extension). This file contains the genotype
+data that the function will process and which is provided by `estimateErrors` earlier, with the `.GOOD.map/ped`-extension.
+
+Optionally, the function can also take a path to an existing genotype database. If provided, the function will merge the genotype output with
+this existing database. If a database is not provided, the function will proceed with the existing data.
+
+The function also accepts a filepath to a map file. If not provided, the function will use the map file with the same name as the ped file.
+
+The output path can also be specified. If not provided, the output will be written to a file with the same name as the input file, appended with “_oDB”.
+
+The function provides control over the verbosity of the output through the `verbose` and `verbosity` parameters. The `verbose` parameter is a logical
+value indicating whether the output should be verbose. The `verbosity` parameter is an integer representing the level of verbosity. Set it to a higher
+number for more detailed output.
+
+Once all parameters are set, the function first checks the input parameters and sets default values if necessary. It then constructs and executes
+a PLINK command to merge the genotype output with the existing genotype database (e.g. from previous runs) if one is provided. Finally, it calculates
+pairwise similarities for all samples (and database individuals) using another PLINK command.
+
+In summary, the calculatePairwiseSimilarities function is a comprehensive tool for calculating pairwise similarities between genotypes, with additional features for sex determination and integration with an existing genotype database. It provides a convenient interface to the powerful capabilities of the PLINK software, making it an essential tool for whole genome association analysis.
+
+The basic call is as follows
+
+```{r, eval = FALSE}
+calculatePairwiseSimilarities(file="new_data.GOOD")
+```
+
+This function essentially creates the required Plink command and executes it on the system-level. Per default, the function gives feedback, when the function is ready,
+but in case that `verbosity` is set to 2, the on-screen plink output is also displayed in R. In addition, the output is stored in the file `<filename>.log`.
+
+### Output
+
+The function generates a set of files, namely
+
+1. `<filename>.cluster0`
+2. `<filename>.cluster1`
+3. `<filename>.cluster2`
+4. `<filename>.cluster3`
+5. `<filename>.log`
+6. `<filename>.mibs`
+7. `<filename>.nosex`
+
+The four outputs `<filename>.cluster*` provide four different cluster solutions, the `log`-file contains the plink on-screen output. The file `<filename>.nosex` contains
+the list of samples with ambigous sex-codes. If the sexing did not go well (or was not requested earlier), this might lead to an exclusion of many/all samples, so here the
+additional option `sexing=FALSE` needs to be considerd.
+
+The file `<filename>.mibs` contains the IBS similarity matrix. Calculating the IBS similarity matrix is a part of the plink functionality. For the N individuals in a sample,
+PLINK creates an N x N matrix of genome-wide average IBS pairwise identities. This matrix is created using the command `plink --file mydata --cluster --matrix`, which generates the file plink.mibs1. This file contains a square, symmetric matrix of the IBS distances for all pairs of individuals. These values range, in theory, from 0 to 11.
+
+The IBS distance is calculated based on the average proportion of alleles shared at genotyped SNPs. It’s a measure of genetic similarity between two individuals. A higher IBS value indicates a higher degree of genetic similarity.
+
+In the context of PLINK, this IBS similarity matrix is used for clustering individuals based on their genetic similarity. This can be useful in a variety of applications, such as detecting sample contaminations, swaps and duplications, as well as pedigree errors and unknown familial relationships.
+
+## Get pairwise similarity loci
+The `getPairwiseSimilarityLoci` function, which is a wrapper for a Perl script, performs pairwise comparisons of genotypes. Specifically, it counts the number of complete pairwise comparisons, with no missing alleles, between each genotype. 
+
+In the context of this script, a pairwise comparison involves comparing two genotypes locus by locus. A locus is here a specific location of a gene or DNA sequence on a chromosome. When the script compares two genotypes, it checks each locus to see if the alleles (versions of a gene) are the same or different. 
+
+If a locus has no missing alleles in both genotypes, it's considered a complete pairwise comparison. The script counts the number of these complete pairwise comparisons for each pair of genotypes. This count is then written to an output file.
+
+This analysis can be useful in genetic studies to understand the similarity or dissimilarity between different individuals or species. It can help identify regions of the genome where there may be significant genetic variation, which could be associated with different traits or susceptibility to certain diseases. 
+
+Please note that the function does not return a value in the R environment. Instead, it creates an output file with the '.pairs' extension in the same directory as the input file. This output file contains the results of the pairwise similarity loci analysis. 
+
+The original code this function is based on can be found at the following URL: `https://github.com/douglasgscofield/bioinfo/blob/main/scripts/plink-pairwise-loci.pl` 
+
+The basic usage of the function is
+
+```{r, eval=FALSE}
+getPairwiseSimilarityLoci(file="new_data.GOOD")
+```
+
+### Output
+
+The output file `<filename>.pairs` produced by the `getPairwiseSimilarityLoci` function contains a matrix that represents the results of the pairwise similarity loci analysis.
+
+Each row in the matrix corresponds to a genotype from the input PED file, and each column corresponds to another genotype. The value in the i-th row and j-th column of the matrix is the number of complete pairwise comparisons, with no missing alleles, between the i-th and j-th genotypes.
+
+A complete pairwise comparison at a specific locus means that both genotypes have non-missing alleles at that locus. The script counts the number of such loci for each pair of genotypes and writes this count to the corresponding cell in the matrix.
+
+In other words, the matrix provides a comprehensive overview of the pairwise similarities between all pairs of genotypes in the input PED file. The higher the value in a cell, the more similar the corresponding pair of genotypes are, in terms of non-missing alleles at each locus.
+
+## Similarity Matrix
+
+The similarityMatrix function is a key component of a genetic analysis pipeline. It performs a pairwise similarity analysis on genotypic data, which involves comparing each pair of genotypes in the dataset to determine how similar they are.
+
+The function takes as input a main file and optionally separate MIBS, PAIRS, and PED files. If these separate files are not provided, the function assumes they have the same base name as the main file with their respective extensions.
+
+The function reads the genotype data from these files and calculates the pairwise similarities. These similarities are then outputted to a CSV file. All pairwise similarities that are above a specified threshold (default is 0.85) are included in this output.
+
+If the plots parameter is set to TRUE, the function also generates histograms of the pairwise similarities and saves them as a PNG file. These plots provide a visual representation of the distribution of the pairwise similarities, which can be useful for understanding the overall structure and diversity of the genotypic data.
+
+If a group is specified, the function performs additional analysis for each sample in the group. This includes generating individual output files for each sample, which can be useful for performing sample-wise statistics.
+
+The verbose and verbosity parameters control the amount of detail printed during the execution of the function. If verbose is TRUE, the function prints messages during its execution to help you understand what it’s doing at each step. The verbosity parameter controls the level of detail in these messages.
+
+In summary, the similarityMatrix function is a powerful tool for genetic analysis. It provides a way to quantify the similarities between genotypes, which can be crucial for many downstream analyses such as clustering, classification, and association studies. By generating detailed output files and plots, it allows you to thoroughly explore and understand your genotypic data.
+
+The basic use is 
+
+```{r, eval = FALSE}
+similarityMatrix(file="new_data.GOOD")
+```
+
+### Output
+The similarityMatrix function generates several output files based on the analysis it performs:
+
+1. `<filename>.GOOD.pairwise_similarities.png`
+
+If the `plots` parameter is set to `TRUE`, the function generates a histogram of the pairwise similarities and saves it as a PNG file. This file provides a visual representation of the distribution of the pairwise similarities.
+
+2. `<filename>.similar_0.85.genotypes.rout`
+CSV file with pairwise similarities. The function outputs all pairwise similarities that are greater than or equal to the similarity threshold to a CSV file. Each row in this file represents a pair of samples, and the columns contain the sample identifiers and the calculated similarity.
+
+Individual output files for each sample in the groups. If a group is specified, the function performs additional analysis for each sample in the group and generates individual output files for each sample. These files contain detailed results of the pairwise similarity analysis for each sample in the group.
+
+## Run all commands at once
+The `fluidigmAnalysisWrapper` function serves as a wrapper for the entire analysis pipeline. It takes a Fluidigm input file and performs several operations including conversion to PLINK format, error estimation, calculation of pairwise similarities, determination of pairwise similarity loci, and calculation of the similarity matrix, as described in the paragraphs above.
+
+To run the pipeline, you simply need to call the `fluidigmAnalysisWrapper` function with the appropriate parameters. The function first checks the input parameters and sets default values if necessary. It then runs the following functions in order: `fluidigm2PLINK`, `estimateErrors`, `calculatePairwiseSimilarities`, `getPairwiseSimilarityLoci`, and `similarityMatrix`. The function prints a completion message when all operations are done.
+
+The pipeline does not return a value. Instead, it creates output files in the same directory as the input files. These files contain the results of the pairwise similarity loci analysis and the similarity matrix.
+
+In the basic usage, you can trigger the entire pipeline by running
+
+```{r, eval=FALSE}
+res <- fluidigmAnalysisWrapper(file="example_data.csv",
+                               map="example_data.map",
+                               y.marker="DBY7",
+                               x.marker=c("BICF2P",
+                                          "BICF2P",
+                                          "BICF2S23"),
+                               out="new_data")
+```
+
+# FAQ
+
+1.Error in fluidigm2PLINK(file = file_path, map = file_path_map, outdir = outdir) : 
+  ERROR: You need to fix first the marker names before you can proceed!
+  
+There is a marker name mismatch between my fluidigm output and my provided map file
+This might happen... The function is not designed to fix those mismatches automatically but requires from the user some additional steps to fix those. The most common problem is a mixup of different special characters, e.g. in csv markers are called 'scaffold10:2782', while in the map file they are labelled as 'scaffold10_2782'. The suggested why to fix those is to harmonize the names to one and only character, e.g. '_'. You can do that by running sed in bash e.g. like this
+
+```{bash, eval=FALSE}
+sed -i 's/:/_/g' <filename>
+```
+
+Here, ':' will be substituted with '_'. The `-i`-option indicates that the file itself will be changed. Hence, take care that you backup your data before running this code to
+avoid data loss! Never work on the only copy of data you have, especially not if you plan to change the files!

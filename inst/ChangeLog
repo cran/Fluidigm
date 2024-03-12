@@ -1,0 +1,58 @@
+################################################################################
+#####                                                                      #####
+#####                         CHANGELOG                                    #####
+#####                                                                      #####
+################################################################################
+
+0.2: Stable release version that contains previous updates from versions 0.1.*
+
+0.1.*: UPDATES
+--------------------------------------------------------------------------------
+ß* 88: testthat function for fluidigmAnalysisWrapper added
+* 87: Bugfix in fluidigmAnalysisWrapper that crashed the function call
+* 86: More verbose output added for verbosity>1
+* 85: Fixed the wrapper function and added missing options from individual function calls
+* 84: similarityMatrix tests added
+* 83: Verbosity issues in getPairwiseSimilarityLoci fixed
+* 82: Adjustment for better consistency in finding package installation path
+* 81: Tests for calculatePairwiseSimilarities added
+* 80: Better examples added to estiamteErrors function
+* 79: estimateErrors has now a outdir option to define the output folder as well
+* 78: Added tests for fluidigm2PLINK
+* 77: Added a FAQ section to the vignette to address the most common problems the package might cause
+* 76: Updated fluidigm2PLINK help to provide more details on harmonising marker names mismach issues
+* 75: New option 'outdir' in fluidigm2PLINK function
+* 74: Example dataset added
+* 73: Notes in DESCRIPTION file adjusted
+* 72: Package description added to the manual
+* 71: Help, function and vignette for similarityMatrix adjusted
+* 70: Vignette chapter about getPairwiseSimilarityLoci added
+* 69: Additional and more detailed input checks for getPairwiseSimilarityLoci added
+* 68: Help file description for getPairwiseSimilarityLoci adjusted
+* 67: Vignette chapter about calculatePairwiseSimilarities added
+* 66: Additional and more detailed input checks for calculatePairwiseSimilarities added
+* 65: Help file description for calculatePairwiseSimilarities adjusted
+* 64: Vignette updated for replicates and negative controls
+* 63: Bugfix: estimateErrors concidered sp.markers only when sexing was performed, they act no independent
+* 62: Changed sexing=FALSE as new default in estimateErrors()
+* 61: Added more careful input checks to estimateErrors
+* 60: Updated the function description for estimateErrors
+* 59: Harmonised the output from 'cat' and 'print' to 'message' in fluidigm2PLINK
+* 58: Bugfix: The out option in fluidigm2PLINK was not working properly
+* 57: Option overwrite added to fluidigm2PLINK function
+* 56: Vignette part of fluidigm2PLINK added
+* 55: Details in Rd file for fluidigm2PLINk added
+* 54: More input checks for fluidigm2PLINK
+* 53: Input checks added to calculatePairwiseSimilarities.R
+* 52: More details to calculatePairwiseSimilarities.R added
+* 51: Added manual skeletons for Details and Examples
+* 50: Added the vignette skeleton
+* 49: Added co-authors and contributers
+* 48: Missing function parameters added to the documentation
+* 47: Adding verbosity option for more detailed function feedback (split from verbose logical/numerical mix)
+* 46: Placed importFrom under usethis control ( usethis::use_import_from("grDevices", "png") )
+* 45: Added sexing option tocalculatePairwiseSimilarities() function  (=run PLINK with --allow-no-sex option)
+* 44: Adjusted the fluidigmAnalysisWrapper function so that it works again
+* 43: Added more input checks to fluidigm2PLINK() function
+* 42: Added option sexing=TRUE to estimateErrors() function
+* 41: Added option fixNames=TRUE to fluidigm2PLINK() function
